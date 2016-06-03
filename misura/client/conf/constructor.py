@@ -49,7 +49,7 @@ def sort_children(prop_dict):
         prop['children'] = children
         prop_dict[handle] = prop
     return prop_dict
-            
+
 
 def orgSections(prop_dict, configuration_level=5):
     """Riordina le chiavi a seconda delle sezioni cui appartengono."""
@@ -63,7 +63,7 @@ def orgSections(prop_dict, configuration_level=5):
         if not prop.has_key('children') or isinstance(prop['children'],list):
             prop['children'] = collections.OrderedDict()
             prop_dict[handle] = prop
-        
+
         parent = prop.get('parent', False)
         if parent is False:
             continue
@@ -76,7 +76,7 @@ def orgSections(prop_dict, configuration_level=5):
         if not parentopt.has_key('children') or isinstance(parentopt['children'], list):
             parentopt['children'] = collections.OrderedDict()
         # Append the child to the parent
-        parentopt['children'][handle] = prop 
+        parentopt['children'][handle] = prop
         # Delete the child from the main dictionary
         del prop_dict[handle]
         # Update the parent on the main dictionary
@@ -119,8 +119,9 @@ class Section(QtGui.QWidget):
         self.lay.setLabelAlignment(QtCore.Qt.AlignRight)
         self.lay.setRowWrapPolicy(QtGui.QFormLayout.WrapLongRows)
         self.widgetsMap = {}
+        from misura.canon.option import ao
         for prop in prop_list:
-            self.build(prop)
+            self.add_children(self.lay, prop)
 
         self.setLayout(self.lay)
 
@@ -145,7 +146,7 @@ class Section(QtGui.QWidget):
         lay.addWidget(more)
         out.setLayout(lay)
         return out
-    
+
     def add_children(self, parent_layout, prop):
         parent_widget = widgets.build(self.server, self.remObj, prop, parent=self)
         if parent_widget is False:
@@ -160,7 +161,7 @@ class Section(QtGui.QWidget):
         children_lay = QtGui.QFormLayout()
         children.setLayout(children_lay)
         # Add the parent option plus the expansion button
-        parent_layout.addRow(parent_widget.label_widget, 
+        parent_layout.addRow(parent_widget.label_widget,
                              self.expandable_row(parent_widget, children))
 
         for handle, child in prop['children'].iteritems():
@@ -171,10 +172,6 @@ class Section(QtGui.QWidget):
 
         parent_layout.addRow(children)
         children.hide()
-        
-    def build(self, prop):
-        self.add_children(self.lay, prop)
-        return True
 
 
 class Interface(QtGui.QTabWidget):
@@ -194,18 +191,18 @@ class Interface(QtGui.QTabWidget):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.connect(
             self, QtCore.SIGNAL('customContextMenuRequested(QPoint)'), self.showMenu)
-        
+
     def show_section(self, name):
         sections = self.sectionsMap.keys()
         if name not in sections:
             logging.warning('No section named', name)
         i = sections.index(name)
         self.setCurrentIndex(i)
-        
+
     def showEvent(self, event):
         print 'SHOWEVENT'
         self.rebuild()
-        
+
     def rebuild(self, prop_dict = False):
         """Rebuild the full widget"""
         if not prop_dict:
@@ -215,7 +212,7 @@ class Interface(QtGui.QTabWidget):
             d = k.symmetric_difference(rk)
             if len(d) == 0:
                 logging.debug('Interface.rebuild not needed: options are equal.')
-                return 
+                return
             prop_dict = self.remObj.describe()
         if not prop_dict:
             logging.critical(
@@ -239,7 +236,7 @@ class Interface(QtGui.QTabWidget):
                 QtGui.QKeySequence(_('Ctrl+S')), self)
             self.connect(self.scSave, QtCore.SIGNAL('activated()'), self.sectionsMap[
                          'Main'].widgetsMap['preset'].save_current)
-        
+
 
     def redraw(self, foo=0):
         self.close()
